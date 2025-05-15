@@ -16,6 +16,7 @@ use App\Models\MyClass;
 use App\Repositories\StudentRepo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
 class MarkController extends Controller
@@ -373,43 +374,36 @@ class MarkController extends Controller
         return Qs::jsonUpdateOk();
     }
 
-    public function bulk($class_id = NULL, $section_id = NULL)
+    public function bulk($class_id = NULL)
     {
         $d['my_classes'] = $this->my_class->all();
-
-        // dd($d['my_classes']);
         $d['selected'] = false;
 
-        if($class_id && $section_id){
-            $d['sections'] = $this->my_class->getAllSections()->where('my_class_id', $class_id);
-            $d['students'] = $st = $this->student->getRecord(['my_class_id' => $class_id, 'section_id' => $section_id])->get()->sortBy('user.name');
+        if($class_id){
+            $d['students'] = $st = $this->student->getRecord(['my_class_id' => $class_id])->get()->sortBy('user.name');
             if($st->count() < 1){
                 return redirect()->route('marks.bulk')->with('flash_danger', __('msg.srnf'));
             }
             $d['selected'] = true;
             $d['my_class_id'] = $class_id;
-            $d['section_id'] = $section_id;
         }
-        // dd($d);
 
         return view('pages.support_team.marks.bulk', $d);
     }
 
     public function bulk_select(Request $req)
     {
-
-        return redirect()->route('marks.bulk', [$req->my_class_id, $req->section_id]);
+        return redirect()->route('marks.bulk', [$req->my_class_id]);
     }
 
-    public function tabulation($exam_id = NULL, $class_id = NULL, $section_id = NULL)
+    public function tabulation($exam_id = NULL, $class_id = NULL)
     {
         $d['my_classes'] = $this->my_class->all();
         $d['exams'] = $this->exam->getExam(['year' => $this->year]);
         $d['selected'] = FALSE;
 
-        if($class_id && $exam_id && $section_id){
-
-            $wh = ['my_class_id' => $class_id, 'section_id' => $section_id, 'exam_id' => $exam_id, 'year' => $this->year];
+        if($class_id && $exam_id){
+            $wh = ['my_class_id' => $class_id, 'exam_id' => $exam_id, 'year' => $this->year];
 
             $sub_ids = $this->mark->getSubjectIDs($wh);
             $st_ids = $this->mark->getStudentIDs($wh);
@@ -420,72 +414,25 @@ class MarkController extends Controller
 
             $d['subjects'] = $this->my_class->getSubjectsByIDs($sub_ids);
             $d['students'] = $this->student->getRecordByUserIDs($st_ids)->get()->sortBy('user.name');
-            $d['sections'] = $this->my_class->getAllSections();
 
             $d['selected'] = TRUE;
             $d['my_class_id'] = $class_id;
-            $d['section_id'] = $section_id;
             $d['exam_id'] = $exam_id;
             $d['year'] = $this->year;
             $d['marks'] = $mks = $this->exam->getMark($wh);
             $d['exr'] = $exr = $this->exam->getRecord($wh);
 
             $d['my_class'] = $mc = $this->my_class->find($class_id);
-            $d['section']  = $this->my_class->findSection($section_id);
             $d['ex'] = $exam = $this->exam->find($exam_id);
             $d['tex'] = 'tex'.$exam->term;
-            //$d['class_type'] = $this->my_class->findTypeByClass($mc->id);
-            //$d['ct'] = $ct = $d['class_type']->code;
-        }
-        // dd($d);
-        return view('pages.support_team.marks.tabulation.index', $d);
-    }
-    public function tabulationAll($exam_id = NULL, $class_type_id = NULL)
-    {
-        $d['my_classes'] = $this->my_class->getUniqueGrades();
-        $d['exams'] = $this->exam->getExam(['year' => $this->year]);
-        $d['selected'] = FALSE;
-        var_dump('class_type_id: ' .$class_type_id);
-        dd('exam_id: ' .$exam_id);
-        if($class_type_id && $exam_id){
-
-            $wh = ['class_type_id' => $class_type_id, 'exam_id' => $exam_id, 'year' => $this->year];
-
-            $sub_ids = $this->mark->getSubjectIDs($wh);
-            $st_ids = $this->mark->getStudentIDs($wh);
-
-            if(count($sub_ids) < 1 OR count($st_ids) < 1) {
-                return Qs::goWithDanger('marks.tabulation', __('msg.srnf'));
-            }
-
-            $d['subjects'] = $this->my_class->getSubjectsByIDs($sub_ids);
-            $d['students'] = $this->student->getRecordByUserIDs($st_ids)->get()->sortBy('user.name');
-            $d['sections'] = $this->my_class->getAllSections();
-
-            $d['selected'] = TRUE;
-            // $d['my_class_id'] = $class_id;
-            $d['class_type_id'] = $class_type_id;
-            // $d['section_id'] = $section_id;
-            $d['exam_id'] = $exam_id;
-            $d['year'] = $this->year;
-            $d['marks'] = $mks = $this->exam->getMark($wh);
-            $d['exr'] = $exr = $this->exam->getRecord($wh);
-
-            $d['my_class'] = $mc = MyClass::where('class_type_id', $class_type_id)->first();// $this->my_class($class_id);
-            // $d['section']  = $this->my_class->findSection($section_id);
-            $d['ex'] = $exam = $this->exam->find($exam_id);
-            $d['tex'] = 'tex'.$exam->term;
-            //$d['class_type'] = $this->my_class->findTypeByClass($mc->id);
-            //$d['ct'] = $ct = $d['class_type']->code;
         }
 
-        // dd($d);
         return view('pages.support_team.marks.tabulation.index', $d);
     }
 
-    public function print_tabulation($exam_id, $class_id, $section_id)
+    public function print_tabulation($exam_id, $class_id)
     {
-        $wh = ['my_class_id' => $class_id, 'section_id' => $section_id, 'exam_id' => $exam_id, 'year' => $this->year];
+        $wh = ['my_class_id' => $class_id, 'exam_id' => $exam_id, 'year' => $this->year];
 
         $sub_ids = $this->mark->getSubjectIDs($wh);
         $st_ids = $this->mark->getStudentIDs($wh);
@@ -500,32 +447,22 @@ class MarkController extends Controller
         $d['my_class_id'] = $class_id;
         $d['exam_id'] = $exam_id;
         $d['year'] = $this->year;
-        $wh = ['exam_id' => $exam_id, 'my_class_id' => $class_id];
         $d['marks'] = $mks = $this->exam->getMark($wh);
         $d['exr'] = $exr = $this->exam->getRecord($wh);
 
         $d['my_class'] = $mc = $this->my_class->find($class_id);
-        $d['section']  = $this->my_class->findSection($section_id);
         $d['ex'] = $exam = $this->exam->find($exam_id);
         $d['tex'] = 'tex'.$exam->term;
         $d['s'] = Setting::all()->flatMap(function($s){
             return [$s->type => $s->description];
         });
-        //$d['class_type'] = $this->my_class->findTypeByClass($mc->id);
-        //$d['ct'] = $ct = $d['class_type']->code;
 
         return view('pages.support_team.marks.tabulation.print', $d);
     }
 
     public function tabulation_select(Request $req)
     {
-        // dd($req->all());
-        return redirect()->route('marks.tabulation', [$req->exam_id, $req->my_class_id, $req->section_id]);
-    }
-    public function tabulationClassType(Request $req)
-    {
-        // dd($req->all());
-        return redirect()->route('marks.tabulation-class-type', [$req->exam_id, $req->class_type_id]);
+        return redirect()->route('marks.tabulation', [$req->exam_id, $req->my_class_id]);
     }
 
     protected function verifyStudentExamYear($student_id, $year = null)
@@ -567,20 +504,30 @@ class MarkController extends Controller
             'total' => 'required|integer|min:0',
         ]);
 
-        // Ensure the total is 100
-        if ($request->total !== 100) {
-            return response()->json(['success' => false, 'message' => 'The sum of CA1, CA2, and EXAMS must be 100.']);
-        }
+        try {
+            //code...
+            // Ensure the total is 100
+            info($request->all());
+            // if ($request->total != 100) {
+            //     return response()->json(['success' => false, 'message' => 'The sum of CA1, CA2, and EXAMS must be 100.']);
+            // }
 
-        // Update the marks setup in the database
-        $markSetup = MarkSetup::firstOrNew();
-        $markSetup->ca1 = $request->ca1;
-        $markSetup->ca2 = $request->ca2;
-        $markSetup->exam = $request->exams;
-        $markSetup->total = $request->total;
-        $markSetup->save();
+            // Update the marks setup in the database
+            $markSetup = MarkSetup::firstOrNew();
+            $markSetup->ca1 = $request->ca1;
+            $markSetup->ca2 = $request->ca2;
+            $markSetup->exam = $request->exams;
+            $markSetup->total = $request->total;
+            $markSetup->save();
 
         return response()->json(['success' => true]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th->getMessage());
+            return response()->json(['success' => false, 'message' => 'An error occurred while updating marks setup.']);
+        }
+
+        
     }
 
     public function calculateGrade($finalAverage)

@@ -1,12 +1,26 @@
+@php
+    $ca1Header = request('ca1', $markSetup->ca1);
+    $ca2Header = request('ca2', $markSetup->ca2);
+    $examsHeader = request('exams', $markSetup->exam);
+    $headerFilled = is_numeric($ca1Header) && is_numeric($ca2Header) && is_numeric($examsHeader);
+    $scaled = [0, 0, 0];
+    if ($headerFilled && ($ca1Header + $ca2Header + $examsHeader) > 0) {
+        $sum = $ca1Header + $ca2Header + $examsHeader;
+        $scaled[0] = round(($ca1Header / $sum) * 100);
+        $scaled[1] = round(($ca2Header / $sum) * 100);
+        $scaled[2] = round(($examsHeader / $sum) * 100);
+    }
+    $totalHeader = $headerFilled ? array_sum($scaled) : '';
+@endphp
 <table class="table table-bordered table-responsive text-center">
     <thead>
     <tr>
         <th rowspan="2">S/N</th>
         <th rowspan="2">SUBJECTS</th>
-        <th rowspan="2">CA1<br><input type="number" id="ca1Max" value="{{ $markSetup->ca1 }}" min="1" class="header-input"></th>
-        <th rowspan="2">CA2<br><input type="number" id="ca2Max" value="{{ $markSetup->ca2 }}" min="1" class="header-input"></th>
-        <th rowspan="2">EXAMS<br><input type="number" id="examsMax" value="{{ $markSetup->exam }}" min="1" class="header-input"></th>
-        <th rowspan="2">TOTAL<br><input type="number" id="totalMax" value="{{ $markSetup->total }}" min="1" class="header-input" readonly></th>
+        <th rowspan="2">CA1<br><input type="number" id="ca1Max" value="{{ $ca1Header }}" min="1" class="header-input"></th>
+        <th rowspan="2">CA2<br><input type="number" id="ca2Max" value="{{ $ca2Header }}" min="1" class="header-input"></th>
+        <th rowspan="2">EXAMS<br><input type="number" id="examsMax" value="{{ $examsHeader }}" min="1" class="header-input"></th>
+        <th rowspan="2">TOTAL<br><input type="text" id="totalMax" value="{{ $totalHeader }}" class="header-input" readonly></th>
         <th rowspan="2">GRADE</th>
         {{-- <th rowspan="2">SUBJECT <br> POSITION</th> --}}
         <th rowspan="2">REMARKS</th>
@@ -57,6 +71,42 @@
     </tr>
     </tbody>
 </table>
+<div id="scaledBreakdown" style="font-size:12px; margin-bottom:10px; color:#555; text-align:left;">
+    @if($headerFilled && ($ca1Header + $ca2Header + $examsHeader) > 0)
+        <strong>Scaled (out of 100):</strong> CA1: <span id="scaledCA1">{{ $scaled[0] }}</span>, CA2: <span id="scaledCA2">{{ $scaled[1] }}</span>, Exams: <span id="scaledExams">{{ $scaled[2] }}</span>
+    @endif
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function scaleTo100(ca1, ca2, exams) {
+            const sum = ca1 + ca2 + exams;
+            if (sum === 0) return [0, 0, 0];
+            return [
+                Math.round((ca1 / sum) * 100),
+                Math.round((ca2 / sum) * 100),
+                Math.round((exams / sum) * 100)
+            ];
+        }
+        function updateHeaderTotal() {
+            const ca1 = parseFloat(document.getElementById('ca1Max').value);
+            const ca2 = parseFloat(document.getElementById('ca2Max').value);
+            const exams = parseFloat(document.getElementById('examsMax').value);
+            const totalInput = document.getElementById('totalMax');
+            const breakdown = document.getElementById('scaledBreakdown');
+            if (!isNaN(ca1) && !isNaN(ca2) && !isNaN(exams) && (ca1 + ca2 + exams) > 0) {
+                const scaled = scaleTo100(ca1, ca2, exams);
+                totalInput.value = scaled[0] + scaled[1] + scaled[2];
+                breakdown.innerHTML = `<strong>Scaled (out of 100):</strong> CA1: <span id='scaledCA1'>${scaled[0]}</span>, CA2: <span id='scaledCA2'>${scaled[1]}</span>, Exams: <span id='scaledExams'>${scaled[2]}</span>`;
+            } else {
+                totalInput.value = '';
+                breakdown.innerHTML = '';
+            }
+        }
+        document.getElementById('ca1Max').addEventListener('input', updateHeaderTotal);
+        document.getElementById('ca2Max').addEventListener('input', updateHeaderTotal);
+        document.getElementById('examsMax').addEventListener('input', updateHeaderTotal);
+    });
+</script>
 <style>
     /* Style for header input fields */
     .header-input {

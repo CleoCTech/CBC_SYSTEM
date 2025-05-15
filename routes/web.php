@@ -115,11 +115,11 @@ Route::group(['middleware' => 'auth'], function () {
             Route::group(['middleware' => 'teamSA'], function(){
                 Route::get('batch_fix', 'MarkController@batch_fix')->name('marks.batch_fix');
                 Route::put('batch_update', 'MarkController@batch_update')->name('marks.batch_update');
-                Route::get('tabulation/{exam?}/{class?}/{sec_id?}', 'MarkController@tabulation')->name('marks.tabulation');
+                Route::get('tabulation/{exam?}/{class?}', 'MarkController@tabulation')->name('marks.tabulation');
                 Route::get('tabulation/{exam?}/{class_type_id?}', 'MarkController@tabulationAll')->name('marks.tabulation-class-type');
                 Route::post('tabulation', 'MarkController@tabulation_select')->name('marks.tabulation_select');
                 Route::post('tabulation-all', 'MarkController@tabulationClassType')->name('marks.tabulation-all');
-                Route::get('tabulation/print/{exam}/{class}/{sec_id}', 'MarkController@print_tabulation')->name('marks.print_tabulation');
+                Route::get('tabulation/print/{exam}/{class}', 'MarkController@print_tabulation')->name('marks.print_tabulation');
             });
 
             // FOR teamSAT
@@ -132,7 +132,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::put('comment_update/{exr_id}', 'MarkController@comment_update')->name('marks.comment_update');
                 Route::put('skills_update/{skill}/{exr_id}', 'MarkController@skills_update')->name('marks.skills_update');
                 Route::post('selector', 'MarkController@selector')->name('marks.selector');
-                Route::get('bulk/{class?}/{section?}', 'MarkController@bulk')->name('marks.bulk');
+                Route::get('bulk/{class?}', 'MarkController@bulk')->name('marks.bulk');
                 Route::post('bulk', 'MarkController@bulk_select')->name('marks.bulk_select');
             });
 

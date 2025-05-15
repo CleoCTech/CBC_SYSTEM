@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>Tabulation Sheet - {{ $my_class->name.' '.$section->name.' - '.$ex->name.' ('.$year.')' }}</title>
+    <title>Tabulation Sheet - {{ $my_class->name.' - '.$ex->name.' ('.$year.')' }}</title>
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/print_tabulation.css') }}" />
 </head>
 <body>
@@ -16,7 +16,7 @@
                     {{-- <strong><span style="color: #1b0c80; font-size: 20px;">MINNA, NIGER STATE</span></strong><br/>--}}
                     <strong><span
                                 style="color: #000; font-size: 15px;"><i>{{ ucwords($s['address']) }}</i></span></strong><br/>
-                    <strong><span style="color: #000; font-size: 15px;"> TABULATION SHEET FOR {{ strtoupper($my_class->name.' '.$section->name.' - '.$ex->name.' ('.$year.')' ) }}
+                    <strong><span style="color: #000; font-size: 15px;"> TABULATION SHEET FOR {{ strtoupper($my_class->name.' - '.$ex->name.' ('.$year.')' ) }}
                     </span></strong>
                 </td>
             </tr>

@@ -17,10 +17,10 @@ class MarkSetup extends Model
         parent::boot();
 
         static::saving(function ($model) {
-            $model->total = $model->ca1 + $model->ca2 + $model->exam;
+            // $model->total = $model->ca1 + $model->ca2 + $model->exam;
 
             // Validate that the total is 100
-            if ($model->total !== 100) {
+            if ($model->total != 100) {
                 throw new \Exception('The sum of CA1, CA2, and EXAM must be 100.');
             }
         });

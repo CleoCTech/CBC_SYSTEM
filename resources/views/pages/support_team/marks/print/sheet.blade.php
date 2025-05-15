@@ -23,7 +23,7 @@
     <tr>
         <th rowspan="2">SUBJECTS</th>
         <th colspan="3">CONTINUOUS ASSESSMENT</th>
-        <th rowspan="2">EXAM<br>(60)</th>
+        <th rowspan="2">EXAM<br>({{ $markSetup->exam }})</th>
         <th rowspan="2">FINAL MARKS <br> (100%)</th>
         <th rowspan="2">GRADE</th>
         {{-- <th rowspan="2">SUBJECT <br> POSITION</th> --}}
@@ -43,7 +43,8 @@
     <tr>
         <th>CA1({{ $markSetup->ca1 }})</th>
         <th>CA2({{ $markSetup->ca2  }})</th>
-        <th>TOTAL({{ $markSetup->ca1 + $markSetup->ca2 }})</th>
+        {{-- <th>TOTAL({{ $markSetup->ca1 + $markSetup->ca2 }})</th> --}}
+        <th>TOTAL({{ $markSetup->total }})</th>
     </tr>
     </thead>
     <tbody>
